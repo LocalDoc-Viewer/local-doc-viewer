@@ -24,7 +24,6 @@ local-doc-viewer 是一个本地优先的桌面文档阅读器，当前面向 OF
 - Windows MSI 首版未签名，安装时可能出现 unknown publisher 或 SmartScreen 提示。
 - Linux arm64 deb 在真实 ARM 设备完成 GUI / desktop / 打印入口 smoke 前标记为 experimental / 实验性。
 - 首版不包含自动更新功能，请手动关注 GitHub Releases：https://github.com/LocalDoc-Viewer/local-doc-viewer/releases
-- 从源码构建完整桌面包时，需要额外准备 OFD 渲染组件；普通用户请优先使用 Releases 中的安装包。
 - Office/WPS 预览依赖用户自行配置本机 LibreOffice 程序路径。
 - 应用本地优先，默认不上传用户文档。
 - 当前界面主要是中文，完整英文 UI 后续再做。
@@ -40,7 +39,7 @@ npm --prefix apps/desktop-tauri test
 cargo test --manifest-path apps/desktop-tauri/src-tauri/Cargo.toml
 ```
 
-如需从源码打包完整 OFD 预览能力，还需要把项目的 OFD 渲染组件放到 `apps/desktop-tauri/src-tauri/binaries/ofd-renderer/`。
+桌面打包还需要对应平台的 Tauri 前置依赖；正式发布包以 GitHub Releases 为准。
 
 ## 问题反馈
 
