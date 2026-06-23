@@ -24,9 +24,20 @@ If the page has no installer assets yet, the first public release has not been p
 - The Windows MSI is unsigned for the first release and may show unknown publisher or SmartScreen warnings.
 - The Linux arm64 deb is experimental until it has been smoke-tested on real ARM hardware.
 - The first public release does not include automatic updates; users should check GitHub Releases manually: https://github.com/LocalDoc-Viewer/local-doc-viewer/releases
-- Office/WPS preview depends on a user-configured local LibreOffice executable.
 - The application is local-first and does not upload user documents by default.
 - The UI is currently mainly Chinese; full English UI is planned after the first release.
+
+## Local Office/WPS Preview
+
+Some Office/WPS previews require LibreOffice to be installed locally and configured in the app settings.
+LibreOffice official download page: https://www.libreoffice.org/download/
+
+Recommended configuration:
+
+- Windows: use the default location from the official installer, then set the executable path to `C:\Program Files\LibreOffice\program\soffice.exe`.
+- Linux: install LibreOffice through your distribution package manager, then usually set the executable path to `/usr/bin/libreoffice`; if that path is unavailable, use `which libreoffice` or `which soffice` to find the actual path.
+
+Office/WPS conversion runs locally on the user's machine and does not upload documents.
 
 ## Build
 

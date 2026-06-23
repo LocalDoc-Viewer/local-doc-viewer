@@ -24,9 +24,20 @@ local-doc-viewer 是一个本地优先的桌面文档阅读器，当前面向 OF
 - Windows MSI 首版未签名，安装时可能出现 unknown publisher 或 SmartScreen 提示。
 - Linux arm64 deb 在真实 ARM 设备完成 GUI / desktop / 打印入口 smoke 前标记为 experimental / 实验性。
 - 首版不包含自动更新功能，请手动关注 GitHub Releases：https://github.com/LocalDoc-Viewer/local-doc-viewer/releases
-- Office/WPS 预览依赖用户自行配置本机 LibreOffice 程序路径。
 - 应用本地优先，默认不上传用户文档。
 - 当前界面主要是中文，完整英文 UI 后续再做。
+
+## Office/WPS 本地预览
+
+部分 Office/WPS 文档预览需要本机安装 LibreOffice，并在应用设置中填写 LibreOffice 程序路径。
+LibreOffice 官方下载页：https://www.libreoffice.org/download/
+
+推荐配置：
+
+- Windows：使用官方安装器默认位置，程序路径填写 `C:\Program Files\LibreOffice\program\soffice.exe`
+- Linux：推荐使用发行版包管理器安装 LibreOffice，程序路径通常填写 `/usr/bin/libreoffice`；如不可用，可用 `which libreoffice` 或 `which soffice` 查询实际路径。
+
+Office/WPS 转换在用户本机执行，不上传文档。
 
 ## 构建
 
