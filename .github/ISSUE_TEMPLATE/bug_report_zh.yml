@@ -1,0 +1,73 @@
+name: 问题反馈（中文）
+description: 用中文反馈可复现的 local-doc-viewer 问题
+title: "[问题]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢帮助改进 local-doc-viewer。不要上传真实或敏感文档。如果问题只在私有文件上复现，请描述现象，或构造不含隐私内容的 synthetic sample。
+  - type: input
+    id: app-version
+    attributes:
+      label: 应用版本
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: package-type
+    attributes:
+      label: 安装包类型
+      options:
+        - Windows MSI
+        - Linux amd64 deb
+        - Linux arm64 deb
+        - Source build
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: operating-system
+    attributes:
+      label: 操作系统
+      placeholder: "Windows 11 24H2 / Ubuntu 24.04 / other"
+    validations:
+      required: true
+  - type: input
+    id: document-type
+    attributes:
+      label: 文档类型
+      placeholder: "OFD / PDF / DOCX / XLSX / PPTX / TXT / image"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 使用 synthetic sample，或只描述文件形态，不要上传私有内容。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期行为
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots-or-logs
+    attributes:
+      label: 截图或错误摘要
+      description: 发布前请移除真实文档内容、本地路径、用户名、token 和凭据。
+  - type: checkboxes
+    id: privacy-confirmation
+    attributes:
+      label: 隐私确认
+      options:
+        - label: 我不会上传真实或敏感文档、凭据、token、证书或可识别本机身份的本地路径。
+          required: true

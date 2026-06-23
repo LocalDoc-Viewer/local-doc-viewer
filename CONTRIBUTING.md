@@ -1,7 +1,9 @@
-# Contributing
+# 贡献指南
 
-By contributing to this repository, you agree that your contribution is provided under the project's AGPL-3.0 license.
-Do not submit real user documents, secrets, credentials, certificates, private keys, or private samples.
+语言：中文 | [English](CONTRIBUTING.en.md)
 
-Bug reports should use GitHub Issues. Please include the app version, OS, package type, document type, steps to reproduce, expected behavior, and actual behavior.
-Screenshots are welcome only when they do not reveal private content.
+向本仓库贡献内容，即表示你同意贡献内容按项目的 AGPL-3.0 许可证提供。
+不要提交真实用户文档、secrets、凭据、证书、私钥或本地私有样本。
+
+问题反馈请使用 GitHub Issues。请尽量提供应用版本、操作系统、安装包类型、文档类型、复现步骤、预期行为和实际行为。
+截图可以提供，但必须先移除真实文档内容和隐私信息。
