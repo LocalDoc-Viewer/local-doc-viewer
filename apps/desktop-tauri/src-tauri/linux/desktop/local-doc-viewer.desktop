@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name={{name}}
+Exec={{exec}} %f
+Icon={{icon}}
+Terminal=false
+Categories={{categories}}
+StartupWMClass=local-doc-viewer
+MimeType=application/x-ofd;application/pdf;

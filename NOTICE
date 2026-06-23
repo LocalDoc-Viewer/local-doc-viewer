@@ -1,0 +1,19 @@
+Third-party notices
+
+This file is a public-source notice summary. It is not a binary distribution notice for an official release artifact.
+
+The desktop application uses Tauri, Rust crates, npm packages, PDF.js, and platform WebView runtimes.
+OFD rendering currently uses an OFD renderer path that includes AGPL/LGPL-sensitive dependencies in the private packaging workflow.
+This public source export is licensed under AGPL-3.0 to keep the first public release simple and honest.
+
+Not bundled in this source export:
+- Java runtime / jlink runtime
+- OFD renderer binary resource
+- Windows MSI, Linux deb, AppImage, or other installer artifacts
+- WebView2 Fixed Runtime
+
+Public fixture fonts:
+Some synthetic public OFD/PDF fixtures embed subsets derived from Noto CJK Sans.
+The Noto CJK Sans license text is included at testdata/public/licenses/OFL-1.1-Noto-CJK-Sans.txt.
+
+Major dependency license metadata should be reviewed before producing official binary releases.

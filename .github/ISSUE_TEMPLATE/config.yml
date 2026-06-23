@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Issues
+    url: https://github.com/LocalDoc-Viewer/local-doc-viewer/issues
+    about: Use the bug report template and do not upload private or sensitive documents.

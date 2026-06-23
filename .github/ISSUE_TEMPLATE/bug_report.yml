@@ -1,0 +1,73 @@
+name: Bug report
+description: Report a reproducible local-doc-viewer problem
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve local-doc-viewer. Do not upload private or sensitive documents. If a private file triggers the issue, describe the symptoms or create a synthetic sample.
+  - type: input
+    id: app-version
+    attributes:
+      label: App version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: package-type
+    attributes:
+      label: Package type
+      options:
+        - Windows MSI
+        - Linux amd64 deb
+        - Linux arm64 deb
+        - Source build
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: operating-system
+    attributes:
+      label: Operating system
+      placeholder: "Windows 11 24H2 / Ubuntu 24.04 / other"
+    validations:
+      required: true
+  - type: input
+    id: document-type
+    attributes:
+      label: Document type
+      placeholder: "OFD / PDF / DOCX / XLSX / PPTX / TXT / image"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Use a synthetic sample or describe the file shape without sharing private content.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots-or-logs
+    attributes:
+      label: Screenshots or error summary
+      description: Remove private document content, local paths, user names, tokens, and credentials before posting.
+  - type: checkboxes
+    id: privacy-confirmation
+    attributes:
+      label: Privacy confirmation
+      options:
+        - label: I will not upload private or sensitive documents, credentials, tokens, certificates, or identifying local paths.
+          required: true

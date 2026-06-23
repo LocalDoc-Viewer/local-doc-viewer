@@ -1,0 +1,18 @@
+{
+  "bundle": {
+    "linux": {
+      "deb": {
+        "files": {
+          "/usr/share/mime/packages/local-doc-viewer-ofd.xml": "linux/mime/local-doc-viewer-ofd.xml"
+        },
+        "postInstallScript": "linux/deb/postinst",
+        "postRemoveScript": "linux/deb/postrm",
+        "recommends": ["fonts-noto-cjk"],
+        "desktopTemplate": "linux/desktop/local-doc-viewer.desktop"
+      }
+    },
+    "resources": {
+      "binaries/ofd-renderer/": "ofd-renderer/"
+    }
+  }
+}

@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>local-doc-viewer</title>
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+
+  <body>
+    <main class="app-shell" data-document-center-collapsed="false">
+      <nav id="document-center-rail" class="document-center-rail" aria-label="文档中心快捷入口">
+        <button id="expand-document-center" class="icon-button document-center-rail-button" type="button" title="展开侧栏 (Ctrl+Shift+B)" aria-label="展开侧栏" aria-controls="document-center-sidebar" aria-expanded="false">
+          <i data-lucide="panel-left-open" data-icon="panel-left-open" aria-hidden="true"></i>
+        </button>
+        <button id="rail-open-local-document" class="icon-button document-center-rail-button" type="button" title="打开文档 (Ctrl+O)" aria-label="打开文档">
+          <i data-lucide="folder-open" data-icon="folder-open" aria-hidden="true"></i>
+        </button>
+        <button id="rail-focus-reading-mode" class="icon-button document-center-rail-button" type="button" title="专注阅读 (Ctrl+Shift+F)" aria-label="专注阅读" aria-pressed="false">
+          <i data-lucide="focus" data-icon="focus" aria-hidden="true"></i>
+        </button>
+        <button id="rail-open-settings-panel" class="icon-button document-center-rail-button" type="button" title="设置" aria-label="设置" aria-controls="settings-panel">
+          <i data-lucide="settings" data-icon="settings" aria-hidden="true"></i>
+        </button>
+        <button id="rail-open-help-panel" class="icon-button document-center-rail-button" type="button" title="帮助" aria-label="帮助" aria-controls="help-panel">
+          <i data-lucide="circle-help" data-icon="circle-help" aria-hidden="true"></i>
+        </button>
+      </nav>
+
+      <aside id="document-center-sidebar" class="sidebar document-center">
+        <div class="document-center-title">
+          <div>
+            <p class="eyebrow">本地预览</p>
+            <h1 id="document-center-title">文档阅读器</h1>
+          </div>
+          <div class="document-center-title-actions">
+            <button id="focus-reading-mode" class="icon-button document-center-focus" type="button" title="专注阅读 (Ctrl+Shift+F)" aria-label="专注阅读" aria-pressed="false">
+              <i data-lucide="focus" data-icon="focus" aria-hidden="true"></i>
+            </button>
+            <button id="open-settings-panel" class="icon-button document-center-settings" type="button" title="设置" aria-label="设置" aria-controls="settings-panel">
+              <i data-lucide="settings" data-icon="settings" aria-hidden="true"></i>
+            </button>
+            <button id="open-help-panel" class="icon-button document-center-help" type="button" title="帮助" aria-label="帮助" aria-controls="help-panel">
+              <i data-lucide="circle-help" data-icon="circle-help" aria-hidden="true"></i>
+            </button>
+            <button id="collapse-document-center" class="icon-button document-center-collapse" type="button" title="隐藏侧栏 (Ctrl+Shift+B)" aria-label="隐藏侧栏" aria-controls="document-center-sidebar" aria-expanded="true">
+              <i data-lucide="panel-left-close" data-icon="panel-left-close" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <section id="document-open-section" class="document-open-section" aria-labelledby="document-center-title">
+          <button id="open-local-document" class="primary-action" type="button" title="打开文档 (Ctrl+O)">打开文档</button>
+        </section>
+        <section id="current-document-section" class="current-document-section">
+          <dl class="metadata">
+            <div class="metadata-document-name">
+              <dt>文档</dt>
+              <dd id="document-name">未打开文档</dd>
+            </div>
+            <div>
+              <dt>状态</dt>
+              <dd id="document-status">待命</dd>
+            </div>
+            <div>
+              <dt>页数</dt>
+              <dd id="page-count">-</dd>
+            </div>
+            <div>
+              <dt>缩放</dt>
+              <dd id="scale-value">100%</dd>
+            </div>
+          </dl>
+        </section>
+        <section id="local-management-section" class="local-management-section" aria-labelledby="recent-files-title">
+          <div id="recent-files-section" class="recent-files">
+            <div class="recent-files-header">
+              <h2 id="recent-files-title">最近使用</h2>
+              <button id="refresh-recent-files" class="icon-action" type="button" title="刷新最近文件">刷新</button>
+            </div>
+            <ul id="recent-files-list" class="recent-files-list"></ul>
+          </div>
+        </section>
+      </aside>
+      <div id="document-center-resizer" class="document-center-resizer" role="separator" aria-orientation="vertical" aria-label="调整侧栏宽度" tabindex="0"></div>
+
+      <section class="viewer">
+        <header class="toolbar">
+          <div class="toolbar-row toolbar-row-primary">
+            <div class="toolbar-group navigation-tools" aria-label="导航">
+              <button id="previous-page" class="icon-button" type="button" title="上一页 (PageUp / ↑)" aria-label="上一页">
+                <i data-lucide="chevron-left" data-icon="chevron-left" aria-hidden="true"></i>
+                <span class="button-label">上一页</span>
+              </button>
+              <label class="page-jump" for="page-number-input">
+                <input id="page-number-input" type="text" inputmode="numeric" pattern="[0-9]*" aria-label="当前页码" disabled />
+                <span id="page-total-label">/ -</span>
+              </label>
+              <button id="jump-page" type="button" title="跳转到输入页码">跳转</button>
+              <button id="next-page" class="icon-button" type="button" title="下一页 (PageDown / ↓ / Space)" aria-label="下一页">
+                <i data-lucide="chevron-right" data-icon="chevron-right" aria-hidden="true"></i>
+                <span class="button-label">下一页</span>
+              </button>
+            </div>
+            <div class="toolbar-group zoom-tools" aria-label="缩放">
+              <button id="zoom-out" class="icon-button" type="button" title="缩小 (Ctrl+-)" aria-label="缩小">
+                <i data-lucide="minus" data-icon="minus" aria-hidden="true"></i>
+                <span class="button-label">缩小</span>
+              </button>
+              <button id="zoom-in" class="icon-button" type="button" title="放大 (Ctrl++ / Ctrl+=)" aria-label="放大">
+                <i data-lucide="plus" data-icon="plus" aria-hidden="true"></i>
+                <span class="button-label">放大</span>
+              </button>
+              <button id="reset-zoom" class="zoom-reset-button" type="button" title="恢复 100% 缩放">100%</button>
+              <button id="fit-width" type="button" title="按页面宽度适配窗口">适宽</button>
+              <button id="fit-page" type="button" title="整页适配窗口 (Alt+F)">整页</button>
+            </div>
+            <div class="toolbar-group view-mode-tools" aria-label="阅读模式">
+              <button id="toggle-reader-navigation" class="icon-button" type="button" title="显示书签 (Ctrl+B)" aria-label="显示书签" aria-controls="reader-navigation-panel" aria-expanded="false" disabled>
+                <i data-lucide="panel-left" data-icon="panel-left" aria-hidden="true"></i>
+                <span class="button-label">书签</span>
+              </button>
+              <div class="view-mode-toggle" role="group" aria-label="阅读模式">
+                <button id="single-page-view" class="segmented-button" type="button" aria-pressed="true" title="单页阅读 (Ctrl+M)">单页</button>
+                <button id="continuous-page-view" class="segmented-button" type="button" aria-pressed="false" title="连续阅读 (Ctrl+M)">连续</button>
+              </div>
+            </div>
+            <div class="toolbar-group find-tools" aria-label="查找">
+              <div class="find-controls">
+                <i data-lucide="search" data-icon="search" aria-hidden="true"></i>
+                <input id="pdf-find-query" type="search" placeholder="查找" aria-label="查找" maxlength="128" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" disabled />
+                <button id="find-previous" class="icon-button" type="button" title="向前查找" aria-label="向前查找">
+                  <i data-lucide="arrow-up" data-icon="arrow-up" aria-hidden="true"></i>
+                  <span class="button-label">上一处</span>
+                </button>
+                <button id="find-next" class="icon-button" type="button" title="向后查找" aria-label="向后查找">
+                  <i data-lucide="arrow-down" data-icon="arrow-down" aria-hidden="true"></i>
+                  <span class="button-label">下一处</span>
+                </button>
+                <button id="clear-find" class="icon-button" type="button" title="清除查找" aria-label="清除查找">
+                  <i data-lucide="x" data-icon="x" aria-hidden="true"></i>
+                  <span class="button-label">清除</span>
+                </button>
+                <span id="pdf-find-status" class="find-status" aria-live="polite"></span>
+              </div>
+            </div>
+            <div class="toolbar-group output-tools" aria-label="输出">
+              <button id="print-document" class="icon-button" type="button" title="打印 (Ctrl+P)" aria-label="打印">
+                <i data-lucide="printer" data-icon="printer" aria-hidden="true"></i>
+                <span class="button-label">打印</span>
+              </button>
+            </div>
+            <div class="toolbar-group view-text-tools" aria-label="更多阅读工具">
+              <button id="more-reader-tools" class="icon-button" type="button" title="更多阅读工具" aria-label="更多阅读工具" aria-controls="reader-tools-menu" aria-expanded="false">
+                <i data-lucide="ellipsis" data-icon="ellipsis" aria-hidden="true"></i>
+                <span class="button-label">更多</span>
+              </button>
+              <div id="reader-tools-menu" class="reader-tools-menu" hidden>
+                <button id="close-reader-tools-menu" class="icon-button reader-tools-menu-close" type="button" title="关闭更多阅读工具" aria-label="关闭更多阅读工具">
+                  <i data-lucide="x" data-icon="x" aria-hidden="true"></i>
+                  <span class="button-label">关闭</span>
+                </button>
+                <button id="office-layout-preview" type="button" title="重新转换 Office 预览版式" hidden>适宽预览</button>
+                <button id="rotate-view-left" class="icon-button" type="button" title="向左旋转视图 (Ctrl+[)" aria-label="向左旋转视图">
+                  <i data-lucide="rotate-ccw" data-icon="rotate-ccw" aria-hidden="true"></i>
+                  <span class="button-label">左旋</span>
+                </button>
+                <button id="rotate-view-right" class="icon-button" type="button" title="向右旋转视图 (Ctrl+])" aria-label="向右旋转视图">
+                  <i data-lucide="rotate-cw" data-icon="rotate-cw" aria-hidden="true"></i>
+                  <span class="button-label">右旋</span>
+                </button>
+                <button id="reset-view-rotation" type="button" title="重置视图旋转" aria-label="重置视图旋转">重置旋转</button>
+                <button id="select-current-page-text" type="button" title="全选当前页文字 (Ctrl+A)" aria-label="全选当前页文字">全选文字</button>
+                <button id="copy-current-page-text" class="icon-button" type="button" title="复制当前页文字 (Ctrl+C)" aria-label="复制当前页文字">
+                  <i data-lucide="copy" data-icon="copy" aria-hidden="true"></i>
+                  <span class="button-label">复制文字</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+        <p id="activity-feedback" class="activity-feedback" aria-live="polite" hidden></p>
+        <div id="reader-workspace" class="reader-workspace">
+          <aside id="reader-navigation-panel" class="reader-navigation-panel" aria-label="阅读导航" hidden>
+            <div class="reader-navigation-header">
+              <h2 id="page-navigation-panel-title">书签</h2>
+              <div class="reader-navigation-actions" aria-label="书签显示设置">
+                <button id="decrease-reader-navigation-font" class="reader-navigation-font-button" type="button" title="缩小目录字号" aria-label="缩小目录字号">A-</button>
+                <button id="increase-reader-navigation-font" class="reader-navigation-font-button" type="button" title="放大目录字号" aria-label="放大目录字号">A+</button>
+                <button id="close-reader-navigation" class="icon-button reader-navigation-close" type="button" title="关闭书签" aria-label="关闭书签">
+                  <i data-lucide="x" data-icon="x" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+            <section id="page-navigation-section" class="page-navigation" aria-labelledby="page-navigation-title" hidden>
+              <div class="page-navigation-header">
+                <h2 id="page-navigation-title">页面导航</h2>
+              </div>
+              <p id="page-navigation-empty" class="page-navigation-empty">打开分页文档后显示页码</p>
+              <ul id="page-navigation-list" class="page-navigation-list"></ul>
+            </section>
+            <section id="document-outline-section" class="document-outline" aria-labelledby="document-outline-title" hidden>
+              <div class="document-outline-header">
+                <h2 id="document-outline-title">文档目录</h2>
+              </div>
+              <p id="document-outline-empty" class="document-outline-empty">当前文档没有可跳转目录</p>
+              <ul id="document-outline-list" class="document-outline-list"></ul>
+            </section>
+            <div id="reader-navigation-resizer" class="reader-navigation-resizer" role="separator" aria-orientation="vertical" aria-label="调整导航宽度" tabindex="0"></div>
+          </aside>
+          <div id="page-stage" class="page-stage">
+            <div id="page-surface" class="page-surface">
+              <span id="page-placeholder">未打开文档</span>
+            </div>
+          </div>
+          <div id="print-pages" class="print-pages" hidden></div>
+        </div>
+        <div id="error-diagnostic-overlay" class="error-diagnostic-overlay" hidden>
+          <button id="close-error-diagnostic-overlay" class="icon-button error-diagnostic-close" type="button" title="关闭错误提示" aria-label="关闭错误提示">
+            <i data-lucide="x" data-icon="x" aria-hidden="true"></i>
+          </button>
+          <p id="error-message" class="error-message"></p>
+          <div class="diagnostic-actions">
+            <button id="copy-diagnostic-info" class="quiet-action" type="button" hidden>复制诊断信息</button>
+          </div>
+        </div>
+        <aside id="settings-panel" class="settings-help-backdrop" hidden>
+          <section class="settings-help-panel" aria-labelledby="settings-panel-title">
+            <div class="settings-help-header">
+              <div>
+                <p class="eyebrow">本地管理</p>
+                <h2 id="settings-panel-title">设置</h2>
+              </div>
+              <button id="close-settings-panel" class="icon-button settings-help-close" type="button" title="关闭设置" aria-label="关闭设置">
+                <i data-lucide="x" data-icon="x" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="settings-help-content">
+              <section id="settings-appearance-section" class="settings-help-section" aria-labelledby="settings-appearance-title">
+                <h3 id="settings-appearance-title">外观</h3>
+                <fieldset class="appearance-theme-settings">
+                  <legend>暗黑护眼</legend>
+                  <label class="appearance-theme-option">
+                    <input type="radio" name="appearance-theme" value="system" checked />
+                    <span>跟随系统</span>
+                  </label>
+                  <label class="appearance-theme-option">
+                    <input type="radio" name="appearance-theme" value="light" />
+                    <span>浅色</span>
+                  </label>
+                  <label class="appearance-theme-option">
+                    <input type="radio" name="appearance-theme" value="dark-comfort" />
+                    <span>暗黑护眼</span>
+                  </label>
+                  <p id="appearance-theme-description" class="appearance-theme-description">默认跟随 Windows 深色模式；暗黑护眼使用低亮度灰黑界面，不反色 PDF / OFD / 图片内容。</p>
+                </fieldset>
+              </section>
+              <section id="settings-recent-section" class="settings-help-section" aria-labelledby="settings-recent-title">
+                <h3 id="settings-recent-title">最近文件</h3>
+                <p>只保存本机最近打开记录，关闭后不会继续记录新的最近文件。</p>
+                <div class="settings-control-row">
+                  <label class="recent-files-toggle">
+                    <input id="recent-files-enabled" type="checkbox" checked />
+                    <span>记录最近文件</span>
+                  </label>
+                  <button id="clear-recent-files" class="quiet-action" type="button">清空</button>
+                </div>
+              </section>
+              <section id="settings-language-section" class="settings-help-section" aria-labelledby="settings-language-title">
+                <h3 id="settings-language-title">语言</h3>
+                <fieldset class="app-language-settings">
+                  <legend>界面语言</legend>
+                  <label class="app-language-option">
+                    <input type="radio" name="app-language" value="zh-CN" checked />
+                    <span>中文</span>
+                  </label>
+                  <label class="app-language-option">
+                    <input type="radio" name="app-language" value="en-US" />
+                    <span>English</span>
+                  </label>
+                  <p id="app-language-description" class="app-language-description">当前阶段保存语言偏好，默认中文；完整英文界面将在后续版本逐步补齐。</p>
+                </fieldset>
+              </section>
+              <section id="settings-cache-section" class="settings-help-section" aria-labelledby="settings-cache-title">
+                <h3 id="settings-cache-title">缓存</h3>
+                <p>清理本地渲染缓存，不会删除原始文档。</p>
+                <div class="settings-control-row">
+                  <button id="clear-render-cache" class="quiet-action" type="button">清理缓存</button>
+                </div>
+              </section>
+              <section id="settings-ofd-section" class="settings-help-section" aria-labelledby="settings-ofd-title">
+                <h3 id="settings-ofd-title">OFD</h3>
+                <fieldset class="ofd-page-limit-settings">
+                  <legend>OFD 性能设置</legend>
+                  <label class="ofd-page-limit-option">
+                    <input type="radio" name="ofd-page-limit-preset" value="stable" checked />
+                    <span>稳定模式（最多 20 页）</span>
+                  </label>
+                  <label class="ofd-page-limit-option">
+                    <input type="radio" name="ofd-page-limit-preset" value="extended" />
+                    <span>扩展模式（最多 50 页）</span>
+                  </label>
+                  <label class="ofd-page-limit-option">
+                    <input type="radio" name="ofd-page-limit-preset" value="long_experimental" />
+                    <span>长文档实验模式（最多 200 页）</span>
+                  </label>
+                  <p id="ofd-page-limit-description" class="ofd-page-limit-description"></p>
+                </fieldset>
+              </section>
+              <section id="settings-office-section" class="settings-help-section" aria-labelledby="settings-office-title">
+                <h3 id="settings-office-title">Office / WPS</h3>
+                <p>使用用户显式配置的本地 LibreOffice 路线；不会自动探测或随包安装，不做原格式编辑。</p>
+                <label class="settings-field" for="office-converter-exe" title="填写本机 LibreOffice 程序路径。Office / WPS 预览会在本机调用它转换为临时 PDF，不会上传文件。">
+                  <span>LibreOffice 程序路径</span>
+                  <input id="office-converter-exe" class="settings-text-input" type="text" placeholder="LibreOffice / soffice 程序路径" autocomplete="off" spellcheck="false" aria-describedby="office-converter-exe-help" />
+                </label>
+                <div class="settings-inline-action-row">
+                  <button id="test-office-converter-exe" type="button">测试</button>
+                  <span id="office-converter-test-status" class="converter-test-status" aria-live="polite"></span>
+                </div>
+                <p id="office-converter-exe-help">用于 Office / WPS 预览。Windows 通常填写 soffice.exe，Linux 通常填写 /usr/bin/libreoffice 或 /usr/bin/soffice；本地转换只在本机进行，不会上传文件。</p>
+              </section>
+              <section id="settings-privacy-section" class="settings-help-section" aria-labelledby="settings-privacy-title">
+                <h3 id="settings-privacy-title">隐私边界</h3>
+                <p>本工具不上传文件、不默认联网、不采集文档内容；最近文件、缓存和诊断信息都只围绕本地预览工作。</p>
+              </section>
+            </div>
+          </section>
+        </aside>
+        <aside id="help-panel" class="settings-help-backdrop" hidden>
+          <section class="settings-help-panel" aria-labelledby="help-panel-title">
+            <div class="settings-help-header">
+              <div>
+                <p class="eyebrow">离线说明</p>
+                <h2 id="help-panel-title">帮助</h2>
+              </div>
+              <button id="close-help-panel" class="icon-button settings-help-close" type="button" title="关闭帮助" aria-label="关闭帮助">
+                <i data-lucide="x" data-icon="x" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="settings-help-content">
+              <section id="help-supported-formats" class="settings-help-section">
+                <h3>支持格式</h3>
+                <p>当前 private MVP 聚焦本地预览：OFD、PDF、Office/WPS、txt / log / csv / md 文本和常见图片。</p>
+              </section>
+              <section id="help-office-boundary" class="settings-help-section">
+                <h3>Office / WPS 边界</h3>
+                <p>Office / WPS 预览依赖本地 LibreOffice 转换路线。LibreOffice 是开源办公套件；用户安装并配置程序路径后，转换在本机完成，不会联网或上传文件。本工具不做原格式编辑，也不随应用安装转换组件。</p>
+              </section>
+              <section id="help-print-boundary" class="settings-help-section">
+                <h3>打印边界</h3>
+                <p>当前默认使用 WebView2 原生系统打印入口；这是基础打印入口，不承诺完整页码范围或跨设备矩阵。</p>
+              </section>
+              <section id="help-ofd-boundary" class="settings-help-section">
+                <h3>OFD 边界</h3>
+                <p>OFD 提供稳定模式、扩展模式和长文档实验模式。超过当前模式保护阈值时，会提示用户调整设置后再打开。</p>
+              </section>
+              <section id="help-appearance-boundary" class="settings-help-section">
+                <h3>外观边界</h3>
+                <p>暗黑护眼只调整阅读器外壳亮度；不反色 PDF / OFD / 图片内容，也不改变打印输出边界。</p>
+              </section>
+              <section id="help-privacy-boundary" class="settings-help-section">
+                <h3>隐私与诊断</h3>
+                <p>最近文件、缓存、诊断只服务本机阅读体验；诊断用于复制错误上下文，用户自行决定是否分享。</p>
+              </section>
+              <section id="help-feedback-boundary" class="settings-help-section">
+                <h3>问题反馈</h3>
+                <p>遇到问题时，可通过 GitHub Issues 手动反馈。提交前请先移除本机路径、账号信息和文档内容，不要上传真实或敏感文档。</p>
+                <div class="settings-inline-action-row">
+                  <button id="open-feedback-issues" type="button" title="此操作会打开 GitHub Issues，属于用户主动触发的联网动作">问题反馈</button>
+                  <span id="feedback-issues-status" class="converter-test-status" aria-live="polite"></span>
+                </div>
+              </section>
+              <section id="help-update-boundary" class="settings-help-section">
+                <h3>检查更新</h3>
+                <p>检查更新属于用户主动触发的联网动作；当前 private MVP 暂未接入自动更新源。首版请关注 GitHub Releases 手动获取新版：https://github.com/LocalDoc-Viewer/local-doc-viewer/releases</p>
+                <div class="settings-inline-action-row">
+                  <button id="check-updates-action" type="button" title="此操作在接入后会触发联网动作以检查发布信息">检查更新</button>
+                  <span id="update-check-status" class="converter-test-status" aria-live="polite"></span>
+                </div>
+              </section>
+              <section id="about-app-section" class="settings-help-section">
+                <h3>关于</h3>
+                <p>local-doc-viewer private MVP 是本地优先的文档预览中心，当前聚焦 OFD、PDF、Office/WPS 本地转换预览、文本和图片阅读。</p>
+              </section>
+            </div>
+          </section>
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>

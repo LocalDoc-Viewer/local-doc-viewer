@@ -1,0 +1,20 @@
+Public fixture notices
+
+The files under testdata/public are synthetic test fixtures for local-doc-viewer.
+They must not contain real invoices, contracts, official documents, personal data, customer files, credentials, certificates, signatures, seals, addresses, phone numbers, tax numbers, bank accounts, or other private user content.
+
+Some OFD and PDF fixtures embed subsets derived from Noto CJK Sans for stable public rendering tests.
+The font license text is included at testdata/public/licenses/OFL-1.1-Noto-CJK-Sans.txt.
+
+Original font project: Noto CJK
+Original source URL: https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/08_NotoSansCJKsc.zip
+Release: Sans2.004 / Noto Sans CJK Version 2.004
+Original zip SHA-256: A927E56F53BD6C3B920BC139C0B94AA36C7D9AD0CF009B159437A1A003581140
+Original font file: NotoSansCJKsc-Regular.otf
+Original font SHA-256: 2C76254F6FC379FDDFCE0A7E84FB5385BB135D3E399294F6EEB6680D0365B74B
+
+Embedded public fixtures:
+- testdata/public/ofd/s4c-public-embedded-font-text.ofd
+- testdata/public/ofd/p0-single-page-text.ofd
+- testdata/public/ofd/p0-multi-page-text.ofd
+- testdata/public/pdf/embedded-font-text.pdf

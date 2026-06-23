@@ -1,0 +1,2 @@
+LDV public TXT fixture
+公开人工文本样本第 1 行

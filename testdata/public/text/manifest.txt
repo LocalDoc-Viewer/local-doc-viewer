@@ -1,0 +1,22 @@
+# Public Text Fixtures
+
+> 状态：CURRENT
+> 创建时间：2026-06-16
+
+These files are artificial public fixtures created for `local-doc-viewer`.
+
+## Files
+
+| File | Purpose |
+|---|---|
+| `simple-text.txt` | UTF-8 plain text preview smoke fixture |
+| `simple-log.log` | UTF-8 log preview smoke fixture |
+| `simple-csv.csv` | UTF-8 CSV-as-plain-text preview smoke fixture |
+| `simple-markdown.md` | UTF-8 Markdown-as-raw-text preview smoke fixture |
+
+## Privacy And Source
+
+1. The fixture contents were written specifically for this project.
+2. They do not contain private user documents, real logs, credentials, customer data, or copied online text.
+3. They are safe to keep under `testdata/public/text/`.
+4. Markdown fixtures are intentionally rendered as raw text in MVP3.1b; no HTML execution, link navigation, image loading, or network fetch is part of this gate.

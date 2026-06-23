@@ -1,0 +1,9 @@
+# OFD Fixture Manifest
+
+| 文件 | 生成路线 | 预期页数 | 是否含图片 | 是否含字体 | 是否可进 Git | 备注 |
+|---|---|---:|---|---|---|---|
+| `p0-single-page-text.ofd` | ofdrw + Noto CJK Sans subset | 1 | 否 | 是 | 是 | 人工单页文本样本；嵌入改名后的 `LDVPublicCJKSubset-Regular.otf` P0 coverage 字体子集 |
+| `p0-multi-page-text.ofd` | ofdrw + Noto CJK Sans subset | 5 | 否 | 是 | 是 | 人工多页文本样本；嵌入改名后的 `LDVPublicCJKSubset-Regular.otf` P0 coverage 字体子集，结构包含 `Page_0` 到 `Page_4` |
+| `p0-corrupt-missing-ofdxml.ofd` | 手写 ZIP | 不适用 | 否 | 否 | 是 | 故意缺失 `OFD.xml` 的损坏样本 |
+| `p0-not-ofd-renamed.ofd` | 普通文本改后缀 | 不适用 | 否 | 否 | 是 | 故意不是 ZIP/OFD 的格式校验样本 |
+| `s4c-public-embedded-font-text.ofd` | ofdrw + Noto CJK Sans subset | 1 | 否 | 是 | 是 | 人工中文文本样本，嵌入改名后的 `LDVPublicCJKSubset-Regular.otf` 字体子集；详见 `../NOTICE.md` |
