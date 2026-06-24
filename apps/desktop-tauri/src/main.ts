@@ -1226,7 +1226,7 @@ function syncAppLanguageControls() {
   }
   if (appLanguageDescription) {
     appLanguageDescription.textContent = preference === "en-US"
-      ? "English UI text is not complete in the private MVP; this preference is saved for later localization."
+      ? "English UI text is still incomplete; this preference is saved for later localization."
       : "当前阶段保存语言偏好，默认中文；完整英文界面将在后续版本逐步补齐。";
   }
 }

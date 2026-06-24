@@ -154,7 +154,7 @@ test("OFD page limit settings move out of reader more menu into settings", () =>
   assert.match(settingsMatch[0], /ofd-page-limit-description/);
 });
 
-test("help panel is offline and documents current private MVP boundaries", () => {
+test("help panel is offline and documents current public release boundaries", () => {
   const html = readIndexHtml();
   const source = readMainTs();
 
@@ -173,7 +173,9 @@ test("help panel is offline and documents current private MVP boundaries", () =>
   assert.match(html, /id="help-update-boundary"[\s\S]*暂未接入自动更新[\s\S]*GitHub Releases[\s\S]*手动获取新版/);
   assert.match(html, /id="help-update-boundary"[\s\S]*https:\/\/github\.com\/LocalDoc-Viewer\/local-doc-viewer\/releases/);
   assert.match(html, /id="update-check-status"/);
-  assert.match(html, /id="about-app-section"[\s\S]*local-doc-viewer[\s\S]*private MVP/);
+  assert.match(html, /id="about-app-section"[\s\S]*local-doc-viewer[\s\S]*本地优先/);
+  assert.doesNotMatch(html, /private MVP|当前 private|local-doc-viewer private/);
+  assert.doesNotMatch(source, /private MVP|当前 private|local-doc-viewer private/);
   assert.doesNotMatch(html, /自动上传|在线转换|云同步|自动创建 issue|自动提交 issue/i);
 
   assert.match(source, /const helpPanel = document\.querySelector<HTMLElement>\("#help-panel"\)/);
