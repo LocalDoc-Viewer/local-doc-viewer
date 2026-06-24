@@ -1898,16 +1898,18 @@ test("reader toolbar exposes fit controls for common reading layouts", () => {
 
 test("reader toolbar exposes PDF view rotation controls without flip controls", () => {
   const html = readIndexHtml();
+  const toolbarHtml = html.match(/<header class="toolbar">[\s\S]*?<\/header>/)?.[0] ?? "";
   const source = readMainTs();
   const adapter = readPdfAdapterTs();
 
+  assert.notEqual(toolbarHtml, "");
   assert.match(html, /id="rotate-view-left"/);
   assert.match(html, /aria-label="向左旋转视图"/);
   assert.match(html, /id="rotate-view-right"/);
   assert.match(html, /aria-label="向右旋转视图"/);
   assert.match(html, /id="reset-view-rotation"/);
   assert.match(html, /aria-label="重置视图旋转"/);
-  assert.doesNotMatch(html, /flip|mirror|翻转|镜像/i);
+  assert.doesNotMatch(toolbarHtml, /flip|mirror|翻转|镜像/i);
   assert.match(source, /let pdfViewRotation: ViewRotation = 0/);
   assert.match(source, /function canRotatePdfView\(\)/);
   assert.match(source, /async function rotatePdfView\(direction: 1 \| -1\)/);
@@ -2313,6 +2315,32 @@ test("print entry restores reading status after print dialog closes", () => {
   assert.match(source, /setDocumentStatus\("已打开"\)/);
   assert.match(source, /cleanupPrintLayout\(\)/);
   assert.match(source, /window\.addEventListener\("afterprint", restorePrintStatus\)/);
+});
+
+test("print entry restores the active reading anchor after print UI closes", () => {
+  const source = readMainTs();
+  const printMatch = source.match(/async function printDocument\([^)]*\) \{([\s\S]*?)\n\}/);
+  const snapshotMatch = source.match(/function snapshotPrintReadingState\(\)[\s\S]*?\n\}/);
+  const restoreMatch = source.match(/function restorePrintReadingState\(state: PrintReadingState \| null\)[\s\S]*?\n\}/);
+
+  assert.ok(printMatch, "printDocument block should be found");
+  assert.ok(snapshotMatch, "snapshotPrintReadingState block should be found");
+  assert.ok(restoreMatch, "restorePrintReadingState block should be found");
+  assert.match(source, /type PrintReadingState = \{[\s\S]*currentPage: number;[\s\S]*scale: number;[\s\S]*readerViewMode: ReaderViewMode;[\s\S]*scrollTop: number \| null;[\s\S]*\};/);
+  assert.match(printMatch[1], /pendingPrintReadingState = snapshotPrintReadingState\(\)/);
+  assert.doesNotMatch(printMatch[1], /finally \{\s*restorePrintStatus\(\);\s*\}/);
+  assert.match(source, /queuePrintStatusRestore\(\)/);
+  assert.match(source, /window\.addEventListener\("afterprint", restorePrintStatus\)/);
+  assert.match(source, /window\.addEventListener\("focus", \(\) => \{\s*queuePrintStatusRestore\(\);\s*\}\)/);
+  assert.match(snapshotMatch[0], /currentPage/);
+  assert.match(snapshotMatch[0], /scale/);
+  assert.match(snapshotMatch[0], /readerViewMode/);
+  assert.match(snapshotMatch[0], /pageStage\?\.scrollTop/);
+  assert.match(restoreMatch[0], /currentPage = Math\.min\(Math\.max\(0, state\.currentPage\), Math\.max\(0, session\.page_count - 1\)\)/);
+  assert.match(restoreMatch[0], /scale = state\.scale/);
+  assert.match(restoreMatch[0], /const scrollTop = state\.scrollTop/);
+  assert.match(restoreMatch[0], /pageStage\.scrollTop = scrollTop/);
+  assert.match(restoreMatch[0], /requestAnimationFrame\(\(\) => \{/);
 });
 
 test("print stylesheet fits the current page into one print viewport", () => {

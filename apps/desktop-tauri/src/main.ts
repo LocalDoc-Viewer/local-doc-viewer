@@ -307,6 +307,13 @@ type DocumentLifecycleStatus =
   | "已打开"
   | "操作失败";
 
+type PrintReadingState = {
+  currentPage: number;
+  scale: number;
+  readerViewMode: ReaderViewMode;
+  scrollTop: number | null;
+};
+
 let session: DocumentSession | null = null;
 let currentPage = 0;
 let scale = 1;
@@ -317,6 +324,8 @@ let isBusy = false;
 let activePdfDocument: PdfDocumentHandle | null = null;
 let currentOfficePreview: OfficePreviewContext | null = null;
 let readerViewMode: ReaderViewMode = "single";
+let pendingPrintReadingState: PrintReadingState | null = null;
+let pendingPrintRestoreTimer: number | null = null;
 let ofdPageLimitPresetId: OfdPageLimitPresetId = defaultOfdPageLimitPresetId;
 let continuousRenderRequestId = 0;
 let lastSuccessfulContinuousRenderKey = "";
@@ -2655,7 +2664,7 @@ function closeHelpPanel() {
 }
 
 function showUpdateCheckUnavailable() {
-  const message = "当前版本暂未接入自动检查更新，请关注 GitHub Releases 获取更新动态。";
+  const message = "当前版本暂未接入自动检查更新，请关注 GitHub Releases 获取更新动态；如 GitHub 主库因网络或环境原因一时无法访问、下载较慢，可查看 Gitee 镜像备库。";
   if (updateCheckStatus) {
     updateCheckStatus.textContent = message;
     updateCheckStatus.classList.remove("is-ok");
@@ -4954,16 +4963,26 @@ async function printDocument(request: PrintRequest | null = null) {
   }
 
   await withBusy(async () => {
-    const resolvedRequest = request ?? defaultPrintRequest();
-    const printPageReady = await preparePrintRequestPages(resolvedRequest);
-    if (!printPageReady) {
-      return;
+    cancelQueuedPrintStatusRestore();
+    pendingPrintReadingState = snapshotPrintReadingState();
+    let printUiOpened = false;
+    try {
+      const resolvedRequest = request ?? defaultPrintRequest();
+      const printPageReady = await preparePrintRequestPages(resolvedRequest);
+      if (!printPageReady) {
+        return;
+      }
+      preparePrintForCurrentView(resolvedRequest);
+      setActivityFeedback("已发送打印请求");
+      updateMetadata();
+      preparePrintLayout(resolvedRequest);
+      await showWebViewPrintDialog();
+      printUiOpened = true;
+    } finally {
+      if (!printUiOpened) {
+        restorePrintStatus();
+      }
     }
-    preparePrintForCurrentView(resolvedRequest);
-    setActivityFeedback("已发送打印请求");
-    updateMetadata();
-    preparePrintLayout(resolvedRequest);
-    await showWebViewPrintDialog();
   });
 }
 
@@ -5130,6 +5149,36 @@ function cleanupPrintLayout() {
   delete document.body.dataset.viewRotation;
 }
 
+function snapshotPrintReadingState() {
+  return {
+    currentPage,
+    scale,
+    readerViewMode,
+    scrollTop: pageStage?.scrollTop ?? null,
+  };
+}
+
+function restorePrintReadingState(state: PrintReadingState | null) {
+  if (!state || !session) {
+    return;
+  }
+
+  currentPage = Math.min(Math.max(0, state.currentPage), Math.max(0, session.page_count - 1));
+  scale = state.scale;
+
+  if (!pageStage || state.scrollTop === null || readerViewMode !== state.readerViewMode) {
+    return;
+  }
+
+  const scrollTop = state.scrollTop;
+  pageStage.scrollTop = scrollTop;
+  requestAnimationFrame(() => {
+    if (pageStage && session && readerViewMode === state.readerViewMode) {
+      pageStage.scrollTop = scrollTop;
+    }
+  });
+}
+
 async function copyCurrentPageText() {
   if (!canCopyCurrentPageText() || !session) {
     return;
@@ -5183,7 +5232,11 @@ async function toggleOfficePreviewLayout() {
 }
 
 function restorePrintStatus() {
+  cancelQueuedPrintStatusRestore();
+  const printReadingState = pendingPrintReadingState;
+  pendingPrintReadingState = null;
   cleanupPrintLayout();
+  restorePrintReadingState(printReadingState);
   if (!session || currentActivityFeedback !== "已发送打印请求") {
     return;
   }
@@ -5191,6 +5244,26 @@ function restorePrintStatus() {
   clearActivityFeedback();
   setDocumentStatus("已打开");
   updateMetadata();
+}
+
+function queuePrintStatusRestore() {
+  if (!pendingPrintReadingState || pendingPrintRestoreTimer !== null) {
+    return;
+  }
+
+  pendingPrintRestoreTimer = window.setTimeout(() => {
+    pendingPrintRestoreTimer = null;
+    restorePrintStatus();
+  }, 300);
+}
+
+function cancelQueuedPrintStatusRestore() {
+  if (pendingPrintRestoreTimer === null) {
+    return;
+  }
+
+  window.clearTimeout(pendingPrintRestoreTimer);
+  pendingPrintRestoreTimer = null;
 }
 
 openLocalDocumentButton?.addEventListener("click", openLocalDocument);
@@ -5298,6 +5371,9 @@ printDocumentButton?.addEventListener("click", () => {
   void printDocument();
 });
 window.addEventListener("afterprint", restorePrintStatus);
+window.addEventListener("focus", () => {
+  queuePrintStatusRestore();
+});
 activityFeedback?.addEventListener("pointerdown", startActivityFeedbackDrag);
 errorDiagnosticOverlay?.addEventListener("pointerdown", startErrorDiagnosticOverlayDrag);
 collapseDocumentCenterButton?.addEventListener("click", () => setDocumentCenterCollapsed(true));

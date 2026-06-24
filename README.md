@@ -16,14 +16,14 @@ local-doc-viewer 是一个本地优先的桌面文档阅读器，当前面向 OF
 - GitHub Releases：[Windows MSI、Linux amd64 deb、Linux arm64 deb 下载页](https://github.com/LocalDoc-Viewer/local-doc-viewer/releases)
 - Gitee 发行版：[Windows MSI、Linux amd64 deb、Linux arm64 deb 下载页](https://gitee.com/rita-33a/local-doc-viewer/releases)
 
-如果页面暂时没有安装包，说明首个公开版本还未发布。
+如果镜像页暂时没有最新安装包，请以 GitHub Releases 为准。
 
 ## 当前状态
 
 - 当前仓库提供公开源码，方便查看、构建和反馈问题。
 - 首版计划提供 Windows MSI、Linux amd64 deb 和 Linux arm64 deb。
 - Windows MSI 首版未签名，安装时可能出现 unknown publisher 或 SmartScreen 提示。
-- Linux arm64 deb 在真实 ARM 设备完成 GUI / desktop / 打印入口 smoke 前标记为 experimental / 实验性。
+- Linux arm64 deb 为 experimental / 实验性包，当前面向 Ubuntu 24.04 / WebKitGTK 4.1 环境；其他发行版兼容性取决于系统依赖。
 - 首版不包含自动更新功能，请手动关注 GitHub Releases；如 GitHub 主库因网络或环境原因一时无法访问、下载较慢，可查看 Gitee 镜像备库：https://github.com/LocalDoc-Viewer/local-doc-viewer/releases ｜ https://gitee.com/rita-33a/local-doc-viewer/releases
 - 应用本地优先，默认不上传用户文档。
 - 当前界面主要是中文，完整英文 UI 后续再做。

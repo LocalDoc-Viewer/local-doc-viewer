@@ -11,19 +11,20 @@ The project source is released under AGPL-3.0-only. See [LICENSE](LICENSE).
 
 ## Downloads
 
-Release packages are provided through GitHub Releases:
+Release packages are primarily provided through GitHub Releases, with Gitee as a mirror:
 
-- [Windows MSI, Linux amd64 deb, and Linux arm64 deb downloads](https://github.com/LocalDoc-Viewer/local-doc-viewer/releases)
+- GitHub Releases: [Windows MSI, Linux amd64 deb, and Linux arm64 deb downloads](https://github.com/LocalDoc-Viewer/local-doc-viewer/releases)
+- Gitee Releases: [Windows MSI, Linux amd64 deb, and Linux arm64 deb downloads](https://gitee.com/rita-33a/local-doc-viewer/releases)
 
-If the page has no installer assets yet, the first public release has not been published.
+If the mirror page does not have the latest installer assets yet, use GitHub Releases as the source of truth.
 
 ## Current Status
 
 - Source code is provided for public review and development.
 - Planned first public artifacts: Windows MSI, Linux amd64 deb, and Linux arm64 deb.
 - The Windows MSI is unsigned for the first release and may show unknown publisher or SmartScreen warnings.
-- The Linux arm64 deb is experimental until it has been smoke-tested on real ARM hardware.
-- The first public release does not include automatic updates; users should check GitHub Releases manually: https://github.com/LocalDoc-Viewer/local-doc-viewer/releases
+- The Linux arm64 deb is experimental and currently targets Ubuntu 24.04 / WebKitGTK 4.1 environments; compatibility with other distributions depends on available system dependencies.
+- The first public release does not include automatic updates; users should check GitHub Releases manually. If the GitHub repository is temporarily unavailable or slow in your network environment, the Gitee mirror may also be used: https://github.com/LocalDoc-Viewer/local-doc-viewer/releases | https://gitee.com/rita-33a/local-doc-viewer/releases
 - The application is local-first and does not upload user documents by default.
 - The UI is currently mainly Chinese; full English UI is planned after the first release.
 

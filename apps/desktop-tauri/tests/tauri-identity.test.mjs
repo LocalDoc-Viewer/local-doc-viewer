@@ -26,6 +26,16 @@ function readCargoPackageName(cargoToml) {
   return name[1];
 }
 
+function readCargoPackageVersion(cargoToml) {
+  const packageSection = cargoToml.match(/^\[package\]\s*([\s\S]*?)(?:^\[|\z)/m);
+  assert.ok(packageSection, "Cargo.toml must contain a [package] section");
+
+  const version = packageSection[1].match(/^version\s*=\s*"([^"]+)"/m);
+  assert.ok(version, "Cargo.toml [package] must contain a version");
+
+  return version[1];
+}
+
 test("Tauri packaged app identity uses product binary name", () => {
   const tauriConfig = readJson(resolve(tauriRoot, "tauri.conf.json"));
   const cargoToml = readFileSync(resolve(tauriRoot, "Cargo.toml"), "utf8");
@@ -51,6 +61,15 @@ test("Tauri packaged app identity uses product binary name", () => {
     tauriConfig.productName,
     "This check should prove mainBinaryName intentionally overrides the scaffold cargo binary name",
   );
+});
+
+test("frontend, Tauri config, and Cargo package versions stay aligned", () => {
+  const packageJson = readJson(resolve(desktopRoot, "package.json"));
+  const tauriConfig = readJson(resolve(tauriRoot, "tauri.conf.json"));
+  const cargoToml = readFileSync(resolve(tauriRoot, "Cargo.toml"), "utf8");
+
+  assert.equal(tauriConfig.version, packageJson.version);
+  assert.equal(readCargoPackageVersion(cargoToml), packageJson.version);
 });
 
 test("Linux deb registers OFD in the shared MIME database", () => {
