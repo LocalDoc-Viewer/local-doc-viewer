@@ -22,3 +22,11 @@ export function rotatedViewSize(size: { width: number; height: number }, rotatio
 
   return size;
 }
+
+export function pdfPageViewSize(
+  size: { width: number; height: number },
+  pageRotation: ViewRotation,
+  viewRotation: ViewRotation,
+) {
+  return rotatedViewSize(size, normalizeViewRotation(pageRotation + viewRotation));
+}

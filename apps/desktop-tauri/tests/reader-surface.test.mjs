@@ -200,7 +200,7 @@ test("PDF continuous view renders a window of slots with spacer height", () => {
   assert.match(source, /let pdfContinuousPageLayoutCache:/);
   assert.match(source, /function currentPdfContinuousPageLayout\(\)/);
   assert.match(source, /function pdfContinuousPageSizesForCurrentView\(\)/);
-  assert.match(source, /rotatedViewSize\(\{ width: page\.width_pt, height: page\.height_pt \}, pdfViewRotation\)/);
+  assert.match(source, /pdfPageDisplaySize\(page\)/);
   assert.match(source, /async function renderContinuousPdfPages\(/);
   assert.match(pdfRenderBlock, /layout: currentPdfContinuousPageLayout\(\)/);
   assert.match(pdfRenderBlock, /pageSizeIndex: currentPdfContinuousPageSizeIndex\(\)/);
@@ -225,6 +225,32 @@ test("PDF continuous view renders a window of slots with spacer height", () => {
   assert.match(source, /pdfContinuousRenderQueuePlan\(/);
   assert.match(source, /async function drainLazyContinuousPdfQueue\(/);
   assert.doesNotMatch(source, /void renderContinuousPdfPageSlot\(pageIndex, slot, renderKey\)/);
+});
+
+test("PDF view sizing keeps page slots aligned with PDF.js page rotation", () => {
+  const source = readMainTs();
+  const adapter = readFileSync(resolve(desktopRoot, "src", "pdf", "pdfjsAdapter.ts"), "utf8");
+  const pageInfoStart = source.indexOf("type PageInfo = {");
+  const pageInfoEnd = source.indexOf("};", pageInfoStart);
+  const pageInfoBlock = source.slice(pageInfoStart, pageInfoEnd);
+  const helperStart = source.indexOf("function pdfPageDisplaySize(");
+  const helperEnd = source.indexOf("function pdfContinuousPageSizesForCurrentView", helperStart);
+  const helperBlock = source.slice(helperStart, helperEnd);
+  const renderPdfStart = source.indexOf("async function renderPdfPage()");
+  const renderPdfEnd = source.indexOf("async function documentFindPageTexts", renderPdfStart);
+  const renderPdfBlock = source.slice(renderPdfStart, renderPdfEnd);
+  const selectedPrintStart = source.indexOf("async function prepareSelectedPdfPrintPages");
+  const selectedPrintEnd = source.indexOf("function preparePrintForCurrentView", selectedPrintStart);
+  const selectedPrintBlock = source.slice(selectedPrintStart, selectedPrintEnd);
+
+  assert.match(adapter, /rotation:\s*normalizeViewRotation\(page\.rotate\)/);
+  assert.match(adapter, /getViewport\(\{\s*scale:\s*1,\s*rotation:\s*0\s*}\)/s);
+  assert.match(pageInfoBlock, /rotation\?:\s*ViewRotation/);
+  assert.match(source, /rotation:\s*page\.rotation/);
+  assert.match(helperBlock, /pdfPageViewSize\(/);
+  assert.match(helperBlock, /page\.rotation \?\? 0/);
+  assert.match(renderPdfBlock, /pageInfo\s*\?\s*pdfPageDisplaySize\(pageInfo, scale\)/);
+  assert.match(selectedPrintBlock, /pageInfo\s*\?\s*pdfPageDisplaySize\(pageInfo\)/);
 });
 
 test("PDF continuous view recycles far rendered slots and prioritizes far-page navigation", () => {
@@ -516,8 +542,11 @@ test("PDF print bypasses Blob iframe popup paths and keeps DOM fallback local", 
   assert.match(source, /async function printDocument\(request: PrintRequest \| null = null\)/);
   assert.match(source, /await invoke\("show_webview_print_ui"\)/);
   assert.match(source, /showWebViewPrintDialog\(\)/);
+  assert.doesNotMatch(source, /print_webview_with_system_dialog/);
   assert.match(rustPrint, /COREWEBVIEW2_PRINT_DIALOG_KIND_SYSTEM/);
   assert.doesNotMatch(rustPrint, /COREWEBVIEW2_PRINT_DIALOG_KIND_BROWSER/);
+  assert.doesNotMatch(rustPrint, /PrintDlgExW/);
+  assert.doesNotMatch(rustPrint, /SetPageRanges/);
   assert.doesNotMatch(source, /printActivePdfDocumentBlob/);
   assert.doesNotMatch(source, /printActivePdfDocumentNative/);
   assert.match(source, /async function preparePrintRequestPages\(request: PrintRequest\)/);
@@ -538,6 +567,68 @@ test("PDF print bypasses Blob iframe popup paths and keeps DOM fallback local", 
   assert.match(css, /body\[data-print-view-mode="continuous"\]\s+\.continuous-page-spacer\s*{[^}]*display:\s*none;/s);
   assert.match(css, /body\[data-print-view-mode="continuous"\]\s+\.continuous-page-slot\[data-current-print-page="true"\]\s*{[^}]*aspect-ratio:\s*var\(--ldv-page-print-width\) \/ var\(--ldv-page-print-height\);/s);
   assert.doesNotMatch(source, /window\.print\(\);\s*\/\/ print continuous document/s);
+});
+
+test("toolbar default print targets the current page instead of hidden PDF page ranges", () => {
+  const source = readMainTs();
+  const defaultIndexesStart = source.indexOf("function defaultDomPrintPageIndexes()");
+  const defaultIndexesEnd = source.indexOf("async function preparePrintRequestPages", defaultIndexesStart);
+  const defaultIndexesBlock = source.slice(defaultIndexesStart, defaultIndexesEnd);
+
+  assert.notEqual(defaultIndexesStart, -1, "defaultDomPrintPageIndexes should be found");
+  assert.match(defaultIndexesBlock, /return \[currentPage\];/);
+  assert.doesNotMatch(defaultIndexesBlock, /Array\.from\(\{\s*length:\s*session\.page_count/);
+});
+
+test("single-page toolbar print keeps the visible current page surface", () => {
+  const source = readMainTs();
+  const defaultIndexesStart = source.indexOf("function defaultDomPrintPageIndexes()");
+  const defaultIndexesEnd = source.indexOf("async function preparePrintRequestPages", defaultIndexesStart);
+  const defaultIndexesBlock = source.slice(defaultIndexesStart, defaultIndexesEnd);
+  const selectedPagesMatch = source.match(/async function prepareSelectedPdfPrintPages\(request: PrintRequest\) \{([\s\S]*?)\n\}/);
+  const printLayoutMatch = source.match(/function preparePrintLayout\(request: PrintRequest\) \{([\s\S]*?)\n\}/);
+
+  assert.notEqual(defaultIndexesStart, -1, "defaultDomPrintPageIndexes should be found");
+  assert.ok(selectedPagesMatch, "prepareSelectedPdfPrintPages block should be found");
+  assert.ok(printLayoutMatch, "preparePrintLayout block should be found");
+  assert.match(defaultIndexesBlock, /return \[currentPage\];/);
+  assert.match(selectedPagesMatch[1], /const printsOnlyCurrentPage = request\.pageIndexes\.length === 1 && request\.pageIndexes\[0\] === currentPage/);
+  assert.match(selectedPagesMatch[1], /if \(printsOnlyCurrentPage\) \{[\s\S]*return false;[\s\S]*}/);
+  assert.match(printLayoutMatch[1], /if \(isContinuousViewActive\(\)\) \{[\s\S]*prepareContinuousPrintLayout\(\);[\s\S]*return;[\s\S]*}/);
+  assert.match(printLayoutMatch[1], /applyPrintBodyState\(singlePagePrintState\(\{/);
+  assert.match(printLayoutMatch[1], /pageOrientation: pageSurface\?\.dataset\.printOrientation/);
+});
+
+test("PDF toolbar print does not claim system ranges map to document pages", () => {
+  const source = readMainTs();
+  const libRs = readFile("src-tauri/src/lib.rs");
+  const webviewPrintRs = readFile("src-tauri/src/webview_print.rs");
+  const cargoToml = readFile("src-tauri/Cargo.toml");
+
+  assert.doesNotMatch(source, /print_webview_with_system_dialog/);
+  assert.doesNotMatch(libRs, /webview_print::print_webview_with_system_dialog/);
+  assert.doesNotMatch(webviewPrintRs, /PrintDlgExW/);
+  assert.doesNotMatch(webviewPrintRs, /PageRanges/);
+  assert.doesNotMatch(webviewPrintRs, /SetPrinterName/);
+  assert.doesNotMatch(cargoToml, /^windows = \{/m);
+});
+
+test("WebView2 print PDF diagnostic is opt-in and writes only to ignored tmp output", () => {
+  const source = readMainTs();
+  const libRs = readFile("src-tauri/src/lib.rs");
+  const webviewPrintRs = readFile("src-tauri/src/webview_print.rs");
+
+  assert.match(webviewPrintRs, /pub fn export_webview_print_pdf_diagnostic/);
+  assert.match(webviewPrintRs, /ICoreWebView2_7/);
+  assert.match(webviewPrintRs, /PrintToPdfCompletedHandler/);
+  assert.match(webviewPrintRs, /\.PrintToPdf\(/);
+  assert.match(webviewPrintRs, /tmp[\\\/]print-diagnostics|tmp",\s*"print-diagnostics"/);
+  assert.match(libRs, /webview_print::export_webview_print_pdf_diagnostic/);
+  assert.match(source, /localStorage\.getItem\("localDocViewer\.printDiagnostics"\) === "1"/);
+  assert.match(source, /await invoke<string>\("export_webview_print_pdf_diagnostic"\)/);
+  assert.match(source, /await maybeExportWebViewPrintPdfDiagnostic\(\);[\s\S]*await showWebViewPrintDialog\(\);/);
+  assert.doesNotMatch(source, /localDocViewer\.printDiagnostics[\s\S]*window\.print\(\)/);
+  assert.doesNotMatch(webviewPrintRs, /document\.createElement\("iframe"\)|window\.open|new Blob/);
 });
 
 test("reader open entry includes the current Office and WPS support matrix", () => {
@@ -2299,10 +2390,15 @@ test("PDF adapter normalizes copied text and cleans page resources", () => {
 test("print entry updates visible document status after dispatching print", () => {
   const source = readMainTs();
   const match = source.match(/async function printDocument\([^)]*\) \{([\s\S]*?)\n\}/);
+  const printDialogMatch = source.match(/async function showWebViewPrintDialog\([^)]*\) \{([\s\S]*?)\n\}/);
 
   assert.ok(match, "printDocument block should be found");
+  assert.ok(printDialogMatch, "showWebViewPrintDialog block should be found");
   assert.match(match[1], /await showWebViewPrintDialog\(\)/);
-  assert.match(source, /async function showWebViewPrintDialog\(\) \{[\s\S]*await invoke\("show_webview_print_ui"\);[\s\S]*window\.print\(\);[\s\S]*\}/);
+  assert.doesNotMatch(printDialogMatch[1], /session\?\.file_type === "pdf"/);
+  assert.doesNotMatch(printDialogMatch[1], /print_webview_with_system_dialog/);
+  assert.match(printDialogMatch[1], /await invoke\("show_webview_print_ui"\);/);
+  assert.match(printDialogMatch[1], /window\.print\(\);/);
   assert.match(match[1], /setActivityFeedback\("已发送打印请求"\)/);
   assert.match(match[1], /updateMetadata\(\)/);
 });
@@ -2384,7 +2480,7 @@ test("print entry prepares page orientation from the rendered page", () => {
   assert.match(source, /document\.body\.dataset\.printOrientation = state\.printOrientation/);
   assert.match(source, /function cleanupPrintLayout\(\)/);
   assert.match(source, /delete document\.body\.dataset\.printOrientation/);
-  assert.match(source, /preparePrintLayout\(resolvedRequest\);\s+await showWebViewPrintDialog\(\)/);
+  assert.match(source, /preparePrintLayout\(resolvedRequest\);\s+await maybeExportWebViewPrintPdfDiagnostic\(\);\s+await showWebViewPrintDialog\(\)/);
 });
 
 test("reader sidebar exposes privacy-safe recent file controls", () => {

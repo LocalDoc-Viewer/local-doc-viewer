@@ -51,3 +51,16 @@ test("view rotation swaps display size for quarter turns", async () => {
   assert.deepEqual(rotatedViewSize({ width: 612, height: 792 }, 180), { width: 612, height: 792 });
   assert.deepEqual(rotatedViewSize({ width: 612, height: 792 }, 270), { width: 792, height: 612 });
 });
+
+test("PDF page view size combines intrinsic page rotation with user view rotation", async () => {
+  const { pdfPageViewSize } = await loadViewRotation();
+
+  assert.deepEqual(
+    pdfPageViewSize({ width: 612, height: 792 }, 0, 270),
+    { width: 792, height: 612 },
+  );
+  assert.deepEqual(
+    pdfPageViewSize({ width: 612, height: 792 }, 90, 270),
+    { width: 612, height: 792 },
+  );
+});

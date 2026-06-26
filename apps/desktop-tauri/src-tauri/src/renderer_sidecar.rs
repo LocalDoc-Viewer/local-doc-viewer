@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 
 use serde::Deserialize;
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
@@ -9,6 +11,14 @@ const DEFAULT_SIDECAR_TIMEOUT: Duration = Duration::from_secs(30);
 const DEFAULT_SIDECAR_STDOUT_LIMIT_BYTES: usize = 4 * 1024 * 1024;
 const DEFAULT_SIDECAR_STDERR_LIMIT_BYTES: usize = 64 * 1024;
 const DEFAULT_SIDECAR_DETAIL_LIMIT_BYTES: usize = 64 * 1024;
+
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+#[cfg(windows)]
+fn sidecar_creation_flags() -> u32 {
+    CREATE_NO_WINDOW
+}
 
 #[derive(Debug, Clone)]
 pub(crate) struct CommandResult {
@@ -187,12 +197,15 @@ impl CommandRunner for ProcessCommandRunner {
         let mut command_args = self.fixed_args.clone();
         command_args.extend_from_slice(args);
 
-        let mut child = match Command::new(&self.executable)
+        let mut command = Command::new(&self.executable);
+        command
             .args(command_args)
             .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()
-        {
+            .stderr(Stdio::piped());
+        #[cfg(windows)]
+        command.creation_flags(sidecar_creation_flags());
+
+        let mut child = match command.spawn() {
             Ok(child) => child,
             Err(error) => {
                 return CommandResult {
@@ -1260,6 +1273,15 @@ mod tests {
 
         assert_eq!(parsed.pages[0].text, "MVP0 OFD Sample - Single Page Text");
         assert_eq!(parsed.duration_ms, 5);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_sidecar_process_creation_flags_include_no_window() {
+        assert_eq!(
+            sidecar_creation_flags() & CREATE_NO_WINDOW,
+            CREATE_NO_WINDOW
+        );
     }
 
     #[cfg(windows)]

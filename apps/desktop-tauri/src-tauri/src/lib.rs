@@ -41,6 +41,7 @@ pub fn run() {
             document_core::render_fake_page,
             document_core::set_recent_files_enabled,
             document_core::startup_document_path,
+            webview_print::export_webview_print_pdf_diagnostic,
             webview_print::show_webview_print_ui
         ])
         .run(tauri::generate_context!())

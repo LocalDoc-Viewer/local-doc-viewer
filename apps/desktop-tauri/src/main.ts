@@ -149,7 +149,7 @@ import {
   type PdfDocumentHandle,
   type PdfOpenResult,
 } from "./pdf/pdfjsAdapter";
-import { nextViewRotation, rotatedViewSize, type ViewRotation } from "./viewRotation";
+import { nextViewRotation, pdfPageViewSize, rotatedViewSize, type ViewRotation } from "./viewRotation";
 import "./styles.css";
 
 type EngineInfo = {
@@ -163,6 +163,7 @@ type PageInfo = {
   index: number;
   width_pt: number;
   height_pt: number;
+  rotation?: ViewRotation;
 };
 
 type DocumentSession = {
@@ -560,7 +561,18 @@ function pageScaleBaseSize() {
     width: pageInfo.width_pt * bitmapScaleBase,
     height: pageInfo.height_pt * bitmapScaleBase,
   };
-  return session?.file_type === "pdf" || isImageSession() ? rotatedViewSize(size, pdfViewRotation) : size;
+  if (session?.file_type === "pdf") {
+    return pdfPageDisplaySize(pageInfo, bitmapScaleBase);
+  }
+  return isImageSession() ? rotatedViewSize(size, pdfViewRotation) : size;
+}
+
+function pdfPageDisplaySize(page: PageInfo, pageScale = 1) {
+  return pdfPageViewSize(
+    { width: page.width_pt * pageScale, height: page.height_pt * pageScale },
+    page.rotation ?? 0,
+    pdfViewRotation,
+  );
 }
 
 function pdfContinuousPageSizesForCurrentView() {
@@ -568,7 +580,7 @@ function pdfContinuousPageSizesForCurrentView() {
     return [];
   }
   return session.page_sizes.map((page) => {
-    const size = rotatedViewSize({ width: page.width_pt, height: page.height_pt }, pdfViewRotation);
+    const size = pdfPageDisplaySize(page);
     return {
       index: page.index,
       width_pt: size.width,
@@ -3553,13 +3565,15 @@ async function renderPdfPage() {
   }
 
   const pageInfo = currentPageInfo();
-  const displaySize = rotatedViewSize(
-    {
-      width: (pageInfo?.width_pt ?? 612) * scale,
-      height: (pageInfo?.height_pt ?? 792) * scale,
-    },
-    pdfViewRotation,
-  );
+  const displaySize = pageInfo
+    ? pdfPageDisplaySize(pageInfo, scale)
+    : rotatedViewSize(
+        {
+          width: 612 * scale,
+          height: 792 * scale,
+        },
+        pdfViewRotation,
+      );
   const width = Math.round(displaySize.width);
   const height = Math.round(displaySize.height);
   pageSurface.style.width = `${width}px`;
@@ -3717,6 +3731,7 @@ function pdfSessionFromOpenResult(opened: PdfOpenResult): DocumentSession {
       index: page.index,
       width_pt: page.widthPt,
       height_pt: page.heightPt,
+      rotation: page.rotation,
     })),
     engine: {
       name: "pdfjs",
@@ -4976,6 +4991,7 @@ async function printDocument(request: PrintRequest | null = null) {
       setActivityFeedback("已发送打印请求");
       updateMetadata();
       preparePrintLayout(resolvedRequest);
+      await maybeExportWebViewPrintPdfDiagnostic();
       await showWebViewPrintDialog();
       printUiOpened = true;
     } finally {
@@ -4995,6 +5011,24 @@ async function showWebViewPrintDialog() {
   }
 }
 
+function isPrintDiagnosticsEnabled() {
+  return localStorage.getItem("localDocViewer.printDiagnostics") === "1";
+}
+
+async function maybeExportWebViewPrintPdfDiagnostic() {
+  if (!isPrintDiagnosticsEnabled()) {
+    return;
+  }
+
+  try {
+    const diagnosticPath = await invoke<string>("export_webview_print_pdf_diagnostic");
+    console.info("WebView print diagnostic PDF exported", diagnosticPath);
+    setActivityFeedback("已导出打印诊断 PDF");
+  } catch (error) {
+    console.warn("Failed to export WebView print diagnostic PDF", error);
+  }
+}
+
 function defaultPrintRequest(): PrintRequest {
   return {
     pageIndexes: defaultDomPrintPageIndexes(),
@@ -5003,10 +5037,7 @@ function defaultPrintRequest(): PrintRequest {
 }
 
 function defaultDomPrintPageIndexes() {
-  if (!session || session.file_type !== "pdf" || session.page_count > 200) {
-    return [currentPage];
-  }
-  return Array.from({ length: session.page_count }, (_, index) => index);
+  return [currentPage];
 }
 
 async function preparePrintRequestPages(request: PrintRequest) {
@@ -5048,10 +5079,12 @@ async function prepareSelectedPdfPrintPages(request: PrintRequest) {
   printPagesContainer.replaceChildren();
   for (const pageIndex of request.pageIndexes) {
     const pageInfo = session.page_sizes.find((page) => page.index === pageIndex);
-    const displaySize = rotatedViewSize({
-      width: pageInfo?.width_pt ?? 612,
-      height: pageInfo?.height_pt ?? 792,
-    }, pdfViewRotation);
+    const displaySize = pageInfo
+      ? pdfPageDisplaySize(pageInfo)
+      : rotatedViewSize({
+          width: 612,
+          height: 792,
+        }, pdfViewRotation);
     const printPage = document.createElement("section");
     printPage.className = "print-page";
     printPage.dataset.pageIndex = String(pageIndex);

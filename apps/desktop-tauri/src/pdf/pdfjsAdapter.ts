@@ -10,6 +10,7 @@ export type PdfOpenResult = {
     readonly index: number;
     readonly widthPt: number;
     readonly heightPt: number;
+    readonly rotation: ViewRotation;
   }[];
   readonly engineVersion: string;
 };
@@ -44,11 +45,12 @@ export async function openPdfDocumentFromBytes(data: Uint8Array): Promise<PdfDoc
 
   for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
     const page = await document.getPage(pageNumber);
-    const viewport = page.getViewport({ scale: 1 });
+    const viewport = page.getViewport({ scale: 1, rotation: 0 });
     pageSizes.push({
       index: pageNumber - 1,
       widthPt: viewport.width,
       heightPt: viewport.height,
+      rotation: normalizeViewRotation(page.rotate),
     });
     page.cleanup();
   }
